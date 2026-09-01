@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from openai import OpenAI
+from pydantic import ValidationError
 
 from .models import Decision, MarketSnapshot
 
@@ -17,6 +18,16 @@ Hard rules:
 - Avoid weak trends, weak volume, and unclear invalidation.
 - Return strict JSON matching the requested schema.
 """
+
+
+def parse_decision(content: str) -> Decision:
+    try:
+        return Decision.model_validate_json(content or "{}")
+    except ValidationError as exc:
+        return Decision(
+            action="NO_TRADE",
+            notes=f"OpenAI returned an invalid decision payload: {exc.errors()}",
+        )
 
 
 def decide(
@@ -64,5 +75,5 @@ def decide(
         ],
     )
     content = response.choices[0].message.content or "{}"
-    return Decision.model_validate_json(content)
+    return parse_decision(content)
 
