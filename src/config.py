@@ -26,6 +26,9 @@ class Settings:
     openai_api_key: str
     openai_model: str
     faro_webhook_url: str
+    faro_api_token: str
+    faro_process_id: str
+    faro_strategy_id: str
     faro_timeout_seconds: int
     audit_only: bool
     dry_run: bool
@@ -40,6 +43,9 @@ def load_settings() -> Settings:
         openai_api_key=os.getenv("OPENAI_API_KEY", ""),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
         faro_webhook_url=os.getenv("FARO_WEBHOOK_URL", ""),
+        faro_api_token=os.getenv("FARO_API_TOKEN", ""),
+        faro_process_id=os.getenv("FARO_PROCESS_ID", "jayu-equity-long-auditor"),
+        faro_strategy_id=os.getenv("FARO_STRATEGY_ID", "equity-long-swing-d1"),
         faro_timeout_seconds=int(os.getenv("FARO_TIMEOUT_SECONDS", "15")),
         audit_only=_bool("AUDIT_ONLY", True),
         dry_run=_bool("DRY_RUN", True),
