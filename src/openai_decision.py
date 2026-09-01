@@ -26,9 +26,9 @@ SIGNAL_SCHEMA: dict[str, object] = {
     "additionalProperties": False,
     "properties": {
         "agent": {"type": "string"},
-        "mode": {"const": "audit_only"},
+        "mode": {"type": "string", "enum": ["audit_only"]},
         "symbol": {"type": "string"},
-        "direction": {"const": "LONG"},
+        "direction": {"type": "string", "enum": ["LONG"]},
         "entry": {"type": "number"},
         "stop_loss": {"type": "number"},
         "take_profit_1": {"type": "number"},
@@ -38,8 +38,8 @@ SIGNAL_SCHEMA: dict[str, object] = {
         "setup": {"type": "string"},
         "reason": {"type": "string"},
         "invalidation": {"type": "string"},
-        "execution": {"const": False},
-        "audit": {"const": True},
+        "execution": {"type": "boolean", "enum": [False]},
+        "audit": {"type": "boolean", "enum": [True]},
     },
     "required": [
         "agent",
