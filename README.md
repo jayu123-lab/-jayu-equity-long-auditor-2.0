@@ -34,6 +34,9 @@ Rellena:
 ```env
 OPENAI_API_KEY=
 FARO_WEBHOOK_URL=
+FARO_API_TOKEN=
+FARO_PROCESS_ID=jayu-equity-long-auditor
+FARO_STRATEGY_ID=equity-long-swing-d1
 ```
 
 Para probar sin enviar a FARO:
@@ -56,9 +59,12 @@ Configura estos secrets en GitHub:
 
 - `OPENAI_API_KEY`
 - `FARO_WEBHOOK_URL`
+- `FARO_API_TOKEN`
 
 Variables opcionales:
 
+- `FARO_PROCESS_ID`
+- `FARO_STRATEGY_ID`
 - `MIN_CONFIDENCE`
 - `MAX_SIGNALS_PER_RUN`
 - `WATCHLIST`
