@@ -45,6 +45,8 @@ Para probar sin enviar a FARO:
 DRY_RUN=true python -m src.main
 ```
 
+En `DRY_RUN=true` el agente valida configuración y arranque sin llamar a OpenAI ni a FARO.
+
 Para enviar señales auditadas a FARO:
 
 ```bash
