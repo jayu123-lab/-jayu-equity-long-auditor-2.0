@@ -1,0 +1,38 @@
+name: JAYU Equity Long Auditor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 * * * *"
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Scan market
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          FARO_WEBHOOK_URL: ${{ secrets.FARO_WEBHOOK_URL }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
+          AUDIT_ONLY: "true"
+          DRY_RUN: ${{ vars.DRY_RUN || 'true' }}
+          MIN_CONFIDENCE: ${{ vars.MIN_CONFIDENCE || '80' }}
+          MAX_SIGNALS_PER_RUN: ${{ vars.MAX_SIGNALS_PER_RUN || '3' }}
+          WATCHLIST: ${{ vars.WATCHLIST || 'AAPL,MSFT,NVDA,AMD,AVGO,META,GOOGL,AMZN,TSLA,PLTR,CRWD,NET,ORCL,SMCI' }}
+        run: python -m src.main
+
