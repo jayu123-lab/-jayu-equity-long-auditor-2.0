@@ -1,4 +1,15 @@
-from src.openai_decision import parse_decision
+from src.openai_decision import DECISION_SCHEMA, parse_decision
+
+
+def test_decision_schema_forces_strict_signal_object():
+    props = DECISION_SCHEMA["properties"]
+    signal = props["signal"]
+    assert signal["type"] == ["object", "null"]
+    assert signal["additionalProperties"] is False
+    required = set(signal["required"])
+    assert {"entry", "stop_loss", "take_profit_1", "take_profit_2"}.issubset(required)
+    assert props["action"]["enum"] == ["SIGNAL", "NO_TRADE"]
+    assert "notes" in DECISION_SCHEMA["required"]
 
 
 def test_invalid_signal_payload_can_be_downgraded_to_no_trade():

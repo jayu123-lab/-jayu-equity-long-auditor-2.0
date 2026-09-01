@@ -17,7 +17,64 @@ Hard rules:
 - Minimum reward/risk is 1:2 to TP1.
 - Avoid weak trends, weak volume, and unclear invalidation.
 - Return strict JSON matching the requested schema.
+- When you return a SIGNAL, every numeric field (entry, stop_loss, take_profit_1, take_profit_2) must be a real number, never null. confidence must be an integer 0-100.
+- When you return NO_TRADE, set signal to null.
 """
+
+SIGNAL_SCHEMA: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "agent": {"type": "string"},
+        "mode": {"const": "audit_only"},
+        "symbol": {"type": "string"},
+        "direction": {"const": "LONG"},
+        "entry": {"type": "number"},
+        "stop_loss": {"type": "number"},
+        "take_profit_1": {"type": "number"},
+        "take_profit_2": {"type": "number"},
+        "confidence": {"type": "integer"},
+        "timeframe": {"type": "string"},
+        "setup": {"type": "string"},
+        "reason": {"type": "string"},
+        "invalidation": {"type": "string"},
+        "execution": {"const": False},
+        "audit": {"const": True},
+    },
+    "required": [
+        "agent",
+        "mode",
+        "symbol",
+        "direction",
+        "entry",
+        "stop_loss",
+        "take_profit_1",
+        "take_profit_2",
+        "confidence",
+        "timeframe",
+        "setup",
+        "reason",
+        "invalidation",
+        "execution",
+        "audit",
+    ],
+}
+
+DECISION_SCHEMA: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "action": {"enum": ["SIGNAL", "NO_TRADE"]},
+        "signal": {
+            "type": ["object", "null"],
+            "additionalProperties": False,
+            "properties": SIGNAL_SCHEMA["properties"],
+            "required": SIGNAL_SCHEMA["required"],
+        },
+        "notes": {"type": "string"},
+    },
+    "required": ["action", "signal", "notes"],
+}
 
 
 def parse_decision(content: str) -> Decision:
@@ -68,7 +125,14 @@ def decide(
     response = client.chat.completions.create(
         model=model,
         temperature=0.1,
-        response_format={"type": "json_object"},
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "jayu_decision",
+                "strict": True,
+                "schema": DECISION_SCHEMA,
+            },
+        },
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": json.dumps(payload)},
