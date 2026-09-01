@@ -4,19 +4,24 @@ import requests
 
 from .models import Signal
 
-
+# Contrato real del agente en FARO (ficha en getfaro.org), igual que el emisor
+# automatico ORION: {token, terminal_id, ticker, bias, sl, tp1, tp2, entry_market}.
+# La entrada por integracion es SIEMPRE a mercado (FARO la fija al precio real).
 def build_faro_payload(signal: Signal, api_token: str, process_id: str, strategy_id: str) -> dict[str, object]:
-    payload = signal.model_dump()
-    payload.update(
-        {
-            "token": api_token,
-            "process_id": process_id,
-            "terminal_id": process_id,
-            "strategy_id": strategy_id,
-            "magic": strategy_id,
-        }
-    )
-    return payload
+    return {
+        "token": api_token,
+        "terminal_id": process_id,
+        "ticker": signal.symbol,
+        "bias": "long" if signal.direction == "LONG" else "short",
+        "sl": signal.stop_loss,
+        "tp1": signal.take_profit_1,
+        "tp2": signal.take_profit_2,
+        "entry_market": True,
+        # Auditor: publica senal auditable con posicion reducida (no ejecuta tamano completo).
+        "reduce_to_size": True,
+        "audit": True,
+        "strategy_id": strategy_id,
+    }
 
 
 def send_to_faro(
@@ -31,4 +36,3 @@ def send_to_faro(
     response = requests.post(webhook_url, json=payload, timeout=timeout_seconds)
     response.raise_for_status()
     return response
-

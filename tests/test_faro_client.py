@@ -2,7 +2,7 @@ from src.faro_client import build_faro_payload
 from tests.test_scoring import signal
 
 
-def test_build_faro_payload_adds_agent_identity():
+def test_build_faro_payload_uses_native_agent_contract():
     payload = build_faro_payload(
         signal(),
         api_token="secret-token",
@@ -11,11 +11,12 @@ def test_build_faro_payload_adds_agent_identity():
     )
 
     assert payload["token"] == "secret-token"
-    assert payload["process_id"] == "jayu-equity-long-auditor"
     assert payload["terminal_id"] == "jayu-equity-long-auditor"
-    assert payload["strategy_id"] == "equity-long-swing-d1"
-    assert payload["magic"] == "equity-long-swing-d1"
-    assert payload["direction"] == "LONG"
-    assert payload["execution"] is False
+    assert payload["ticker"] == "NVDA"
+    assert payload["bias"] == "long"
+    assert payload["sl"] == 95
+    assert payload["tp1"] == 111
+    assert payload["tp2"] == 120
+    assert payload["entry_market"] is True
+    assert payload["reduce_to_size"] is True
     assert payload["audit"] is True
-
