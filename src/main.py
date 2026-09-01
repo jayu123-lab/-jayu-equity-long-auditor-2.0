@@ -18,6 +18,17 @@ def log(event: str, **fields: object) -> None:
 
 def main() -> int:
     settings = load_settings()
+    if settings.dry_run:
+        log(
+            "dry_run_ready",
+            message="Configuration loaded. No OpenAI or FARO calls are made while DRY_RUN=true.",
+            audit_only=settings.audit_only,
+            process_id=settings.faro_process_id,
+            strategy_id=settings.faro_strategy_id,
+            watchlist_size=len(settings.watchlist),
+        )
+        return 0
+
     if not settings.openai_api_key:
         log("config_error", message="OPENAI_API_KEY is required")
         return 2
@@ -55,24 +66,21 @@ def main() -> int:
             log("rejected_signal", symbol=symbol, reason=validation_reason, signal=decision.signal.model_dump())
             continue
 
-        if settings.dry_run:
-            log("dry_run_signal", signal=decision.signal.model_dump())
-        else:
-            if not settings.faro_webhook_url:
-                log("config_error", message="FARO_WEBHOOK_URL is required when DRY_RUN=false")
-                return 2
-            if not settings.faro_api_token:
-                log("config_error", message="FARO_API_TOKEN is required when DRY_RUN=false")
-                return 2
-            send_to_faro(
-                settings.faro_webhook_url,
-                decision.signal,
-                settings.faro_api_token,
-                settings.faro_process_id,
-                settings.faro_strategy_id,
-                settings.faro_timeout_seconds,
-            )
-            log("sent_to_faro", signal=decision.signal.model_dump())
+        if not settings.faro_webhook_url:
+            log("config_error", message="FARO_WEBHOOK_URL is required when DRY_RUN=false")
+            return 2
+        if not settings.faro_api_token:
+            log("config_error", message="FARO_API_TOKEN is required when DRY_RUN=false")
+            return 2
+        send_to_faro(
+            settings.faro_webhook_url,
+            decision.signal,
+            settings.faro_api_token,
+            settings.faro_process_id,
+            settings.faro_strategy_id,
+            settings.faro_timeout_seconds,
+        )
+        log("sent_to_faro", signal=decision.signal.model_dump())
 
         sent += 1
         if sent >= settings.max_signals_per_run:
