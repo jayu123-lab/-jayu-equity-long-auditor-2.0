@@ -28,6 +28,9 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           FARO_WEBHOOK_URL: ${{ secrets.FARO_WEBHOOK_URL }}
+          FARO_API_TOKEN: ${{ secrets.FARO_API_TOKEN }}
+          FARO_PROCESS_ID: ${{ vars.FARO_PROCESS_ID || 'jayu-equity-long-auditor' }}
+          FARO_STRATEGY_ID: ${{ vars.FARO_STRATEGY_ID || 'equity-long-swing-d1' }}
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
           AUDIT_ONLY: "true"
           DRY_RUN: ${{ vars.DRY_RUN || 'true' }}
