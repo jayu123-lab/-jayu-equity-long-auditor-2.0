@@ -38,16 +38,19 @@ def main() -> int:
     log("regime", score=regime_score, symbols=[item.model_dump() for item in regime])
 
     sent = 0
-    for symbol in settings.watchlist:
+    symbols = [settings.force_symbol] if settings.force_symbol else settings.watchlist
+    for symbol in symbols:
         snapshot = fetch_snapshot(symbol)
         if snapshot is None:
             log("skip", symbol=symbol, reason="no market data")
             continue
 
         ok, reason = prefilter_symbol(snapshot, regime_score)
-        if not ok:
+        if not ok and not settings.force_send:
             log("skip", symbol=symbol, reason=reason, snapshot=snapshot.model_dump())
             continue
+        if not ok and settings.force_send:
+            log("force_override", symbol=symbol, prefilter_reason=reason, mode="bypass-prefilter")
 
         decision = decide(
             api_key=settings.openai_api_key,
@@ -86,7 +89,8 @@ def main() -> int:
         if sent >= settings.max_signals_per_run:
             break
 
-    log("scan_complete", signals=sent, dry_run=settings.dry_run, audit_only=settings.audit_only)
+    log("scan_complete", signals=sent, dry_run=settings.dry_run, audit_only=settings.audit_only,
+        force_symbol=settings.force_symbol, force_send=settings.force_send)
     return 0
 
 

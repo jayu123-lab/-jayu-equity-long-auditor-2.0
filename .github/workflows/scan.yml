@@ -2,6 +2,19 @@ name: JAYU Equity Long Auditor
 
 on:
   workflow_dispatch:
+    inputs:
+      force_symbol:
+        description: "Símbolo único a escanear (p. ej. NVDA). Vacío = watchlist completa."
+        required: false
+        default: ""
+      force_send:
+        description: "Obliga el envío a FARO aunque el prefilter descarte (sigue validando LONG/audit/SL/TP). true/false"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
   schedule:
     - cron: "7 * * * *"
 
@@ -37,5 +50,7 @@ jobs:
           MIN_CONFIDENCE: ${{ vars.MIN_CONFIDENCE || '80' }}
           MAX_SIGNALS_PER_RUN: ${{ vars.MAX_SIGNALS_PER_RUN || '3' }}
           WATCHLIST: ${{ vars.WATCHLIST || 'AAPL,MSFT,NVDA,AMD,AVGO,META,GOOGL,AMZN,TSLA,PLTR,CRWD,NET,ORCL,SMCI' }}
+          FORCE_SYMBOL: ${{ github.event_name == 'workflow_dispatch' && inputs.force_symbol || '' }}
+          FORCE_SEND: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send || 'false' }}
         run: python -m src.main
 

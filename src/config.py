@@ -36,9 +36,12 @@ class Settings:
     max_signals_per_run: int
     watchlist: list[str]
     regime_symbols: list[str]
+    force_symbol: str | None
+    force_send: bool
 
 
 def load_settings() -> Settings:
+    raw_force_symbol = os.getenv("FORCE_SYMBOL", "").strip().upper()
     return Settings(
         openai_api_key=os.getenv("OPENAI_API_KEY", ""),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
@@ -56,5 +59,7 @@ def load_settings() -> Settings:
             "AAPL,MSFT,NVDA,AMD,AVGO,META,GOOGL,AMZN,TSLA,PLTR,CRWD,NET,ORCL,SMCI",
         ),
         regime_symbols=_csv("REGIME_SYMBOLS", "SPY,QQQ,IWM"),
+        force_symbol=raw_force_symbol or None,
+        force_send=_bool("FORCE_SEND", False),
     )
 
