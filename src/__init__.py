@@ -1,0 +1,2 @@
+"""JAYU Equity Long Auditor."""
+
