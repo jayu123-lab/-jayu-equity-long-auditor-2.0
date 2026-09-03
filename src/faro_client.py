@@ -34,5 +34,16 @@ def send_to_faro(
 ) -> requests.Response:
     payload = build_faro_payload(signal, api_token, process_id, strategy_id)
     response = requests.post(webhook_url, json=payload, timeout=timeout_seconds)
-    response.raise_for_status()
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        body = ""
+        try:
+            body = response.text
+        except Exception:
+            body = "<no body>"
+        raise requests.HTTPError(
+            f"{exc} | faro_status={response.status_code} faro_body={body}",
+            response=response,
+        ) from exc
     return response
