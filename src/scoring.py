@@ -3,6 +3,7 @@ from __future__ import annotations
 from .models import MarketSnapshot, Signal
 
 MIN_THESIS_LENGTH = 20
+MIN_REWARD_TO_RISK = 1.2
 
 
 def _meaningful(text: str) -> bool:
@@ -52,7 +53,7 @@ def validate_signal(signal: Signal, min_confidence: int) -> tuple[bool, str]:
         return False, "stop loss must be below entry"
     if signal.take_profit_1 <= signal.entry or signal.take_profit_2 <= signal.take_profit_1:
         return False, "targets must be above entry and ordered"
-    if reward_to_risk(signal) < 2:
-        return False, "reward/risk below 1:2"
+    if reward_to_risk(signal) < MIN_REWARD_TO_RISK:
+        return False, f"reward/risk below 1:{MIN_REWARD_TO_RISK:.1f}"
     return True, "passed"
 

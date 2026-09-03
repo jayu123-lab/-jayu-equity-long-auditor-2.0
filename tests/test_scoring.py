@@ -1,5 +1,5 @@
 from src.models import MarketSnapshot, Signal
-from src.scoring import MIN_THESIS_LENGTH, market_regime_score, prefilter_symbol, reward_to_risk, validate_signal
+from src.scoring import MIN_REWARD_TO_RISK, MIN_THESIS_LENGTH, market_regime_score, prefilter_symbol, reward_to_risk, validate_signal
 
 
 def snapshot(symbol: str = "NVDA", trend_score: int = 100, relative_volume: float = 1.0) -> MarketSnapshot:
@@ -85,6 +85,23 @@ def test_validate_signal_rejects_short_invalidation():
     ok, reason = validate_signal(s, min_confidence=80)
     assert not ok
     assert "invalidation" in reason
+
+
+def test_validate_signal_accepts_lower_reward_to_risk():
+    s = signal()
+    s.take_profit_1 = 106
+    assert reward_to_risk(s) == 1.2
+    ok, reason = validate_signal(s, min_confidence=80)
+    assert ok
+
+
+def test_validate_signal_rejects_too_low_reward_to_risk():
+    s = signal()
+    s.take_profit_1 = 105
+    ok, reason = validate_signal(s, min_confidence=80)
+    assert not ok
+    assert "reward/risk" in reason
+    assert f"1:{MIN_REWARD_TO_RISK:.1f}" in reason
 
 
 def test_reward_to_risk():
