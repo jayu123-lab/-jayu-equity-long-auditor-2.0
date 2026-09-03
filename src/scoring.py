@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from .models import MarketSnapshot, Signal
 
+MIN_THESIS_LENGTH = 20
+
+
+def _meaningful(text: str) -> bool:
+    return len(text.strip()) >= MIN_THESIS_LENGTH
+
 
 def market_regime_score(regime: list[MarketSnapshot]) -> int:
     if not regime:
@@ -36,6 +42,10 @@ def validate_signal(signal: Signal, min_confidence: int) -> tuple[bool, str]:
         return False, "execution must remain false"
     if not signal.audit:
         return False, "audit must remain true"
+    if not _meaningful(signal.reason):
+        return False, f"thesis (reason) must be at least {MIN_THESIS_LENGTH} characters"
+    if not _meaningful(signal.invalidation):
+        return False, f"invalidation must be at least {MIN_THESIS_LENGTH} characters"
     if signal.confidence < min_confidence:
         return False, "confidence below threshold"
     if signal.stop_loss >= signal.entry:
