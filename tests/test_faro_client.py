@@ -22,8 +22,8 @@ def test_build_faro_payload_uses_native_agent_contract():
     assert payload["reduce_to_size"] is True
     assert payload["audit"] is True
     assert payload["strategy_id"] == "equity-long-swing-d1"
-    explanation = payload["explanation"]
-    assert len(explanation) >= MIN_FARO_EXPLANATION_LENGTH
+    thesis = payload["thesis"]
+    assert len(thesis) >= MIN_FARO_EXPLANATION_LENGTH
 
 
 def test_build_explanation_is_at_least_faro_minimum():

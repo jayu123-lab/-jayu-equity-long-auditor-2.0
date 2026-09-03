@@ -6,13 +6,13 @@ from .models import Signal
 
 # Contrato real del agente en FARO (ficha en getfaro.org), igual que el emisor
 # automatico ORION: {token, terminal_id, ticker, bias, sl, tp1, tp2, entry_market}
-# mas la tesis en `explanation` (FARO la exige con >= 200 caracteres).
+# mas la tesis en `thesis` (FARO la exige con >= 200 caracteres).
 # La entrada por integracion es SIEMPRE a mercado (FARO la fija al precio real).
 MIN_FARO_EXPLANATION_LENGTH = 200
 
 
 def build_explanation(signal: Signal) -> str:
-    """Construye la tesis (explanation) de >= 200 caracteres que FARO exige."""
+    """Construye la tesis (campo `thesis`) de >= 200 caracteres que FARO exige."""
     parts = [part.strip() for part in (signal.setup, signal.reason, signal.invalidation) if part and part.strip()]
     text = ". ".join(parts).strip()
     if not text:
@@ -41,7 +41,7 @@ def build_faro_payload(signal: Signal, api_token: str, process_id: str, strategy
         "reduce_to_size": True,
         "audit": True,
         "strategy_id": strategy_id,
-        "explanation": build_explanation(signal),
+        "thesis": build_explanation(signal),
     }
 
 
