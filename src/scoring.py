@@ -16,7 +16,7 @@ def prefilter_symbol(snapshot: MarketSnapshot, regime_score: int) -> tuple[bool,
         return False, "symbol trend is not strong enough"
     if snapshot.close < snapshot.sma_20:
         return False, "price is below 20-day average"
-    if snapshot.relative_volume < 0.65:
+    if snapshot.relative_volume < 0.45:
         return False, "relative volume is too low"
     return True, "passed"
 
