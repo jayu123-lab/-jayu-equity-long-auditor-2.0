@@ -75,14 +75,18 @@ def main() -> int:
         if not settings.faro_api_token:
             log("config_error", message="FARO_API_TOKEN is required when DRY_RUN=false")
             return 2
-        send_to_faro(
-            settings.faro_webhook_url,
-            decision.signal,
-            settings.faro_api_token,
-            settings.faro_process_id,
-            settings.faro_strategy_id,
-            settings.faro_timeout_seconds,
-        )
+        try:
+            send_to_faro(
+                settings.faro_webhook_url,
+                decision.signal,
+                settings.faro_api_token,
+                settings.faro_process_id,
+                settings.faro_strategy_id,
+                settings.faro_timeout_seconds,
+            )
+        except Exception as exc:  # noqa: BLE001 - un rechazo de FARO no debe tumbar el job
+            log("faro_rejected", symbol=symbol, signal=decision.signal.model_dump(), error=str(exc))
+            continue
         log("sent_to_faro", signal=decision.signal.model_dump())
 
         sent += 1
