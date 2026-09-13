@@ -38,6 +38,11 @@ class Settings:
     regime_symbols: list[str]
     force_symbol: str | None
     force_send: bool
+    bayes_mode: bool
+    bayes_earnings_policy: str
+    bayes_horizon: str
+    bayes_base_threshold: float
+    bayes_openai_thesis: bool
 
 
 def load_settings() -> Settings:
@@ -61,5 +66,10 @@ def load_settings() -> Settings:
         regime_symbols=_csv("REGIME_SYMBOLS", "SPY,QQQ,IWM"),
         force_symbol=raw_force_symbol or None,
         force_send=_bool("FORCE_SEND", False),
+        bayes_mode=_bool("BAYES_MODE", True),
+        bayes_earnings_policy=os.getenv("BAYES_EARNINGS_POLICY", "AVOID").upper(),
+        bayes_horizon=os.getenv("BAYES_HORIZON", "SWING").upper(),
+        bayes_base_threshold=float(os.getenv("BAYES_BASE_THRESHOLD", "0.75")),
+        bayes_openai_thesis=_bool("BAYES_OPENAI_THESIS", True),
     )
 
