@@ -43,6 +43,9 @@ class Settings:
     bayes_horizon: str
     bayes_base_threshold: float
     bayes_openai_thesis: bool
+    telegram_bot_token: str
+    telegram_chat_id: str
+    telegram_enabled: bool
 
 
 def load_settings() -> Settings:
@@ -71,5 +74,8 @@ def load_settings() -> Settings:
         bayes_horizon=os.getenv("BAYES_HORIZON", "SWING").upper(),
         bayes_base_threshold=float(os.getenv("BAYES_BASE_THRESHOLD", "0.75")),
         bayes_openai_thesis=_bool("BAYES_OPENAI_THESIS", True),
+        telegram_bot_token=os.getenv("TELEGRAM_BOT_TOKEN", ""),
+        telegram_chat_id=os.getenv("TELEGRAM_CHAT_ID", ""),
+        telegram_enabled=_bool("TELEGRAM_ENABLED", True),
     )
 

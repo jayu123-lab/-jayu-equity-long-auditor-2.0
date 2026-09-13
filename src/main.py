@@ -11,6 +11,7 @@ from .market_data import fetch_snapshot
 from .models import Signal
 from .openai_decision import decide
 from .scoring import market_regime_score, prefilter_symbol, validate_signal
+from .telegram import build_legacy_summary, build_scan_summary, send_telegram_message
 
 
 def log(event: str, **fields: object) -> None:
@@ -47,6 +48,20 @@ def _publish(settings, signal: Signal) -> bool:
     return True
 
 
+def _notify(settings, text: str) -> None:
+    """Envía aviso a Telegram si está habilitado y configurado. Nunca rompe."""
+    if not settings.telegram_enabled:
+        log("telegram_skipped", reason="TELEGRAM_ENABLED=false")
+        return
+    if not settings.telegram_bot_token or not settings.telegram_chat_id:
+        log("telegram_skipped", reason="TELEGRAM_BOT_TOKEN/CHAT_ID no configurados")
+        return
+    ok = send_telegram_message(text, settings.telegram_bot_token,
+                               settings.telegram_chat_id)
+    log("telegram_sent" if ok else "telegram_failed",
+        length=len(text), ok=ok)
+
+
 def _run_legacy(settings) -> int:
     """Flujo original: OpenAI decide la señal, auditor publica (BAYES_MODE=false)."""
     regime = [snapshot for symbol in settings.regime_symbols
@@ -55,6 +70,8 @@ def _run_legacy(settings) -> int:
     log("regime", score=regime_score, symbols=[item.model_dump() for item in regime])
 
     sent = 0
+    no_trade: list[str] = []
+    rejected: list[str] = []
     symbols = [settings.force_symbol] if settings.force_symbol else settings.watchlist
     for symbol in symbols:
         snapshot = fetch_snapshot(symbol)
@@ -65,6 +82,7 @@ def _run_legacy(settings) -> int:
         ok, reason = prefilter_symbol(snapshot, regime_score)
         if not ok and not settings.force_send:
             log("skip", symbol=symbol, reason=reason, snapshot=snapshot.model_dump())
+            rejected.append(symbol)
             continue
         if not ok and settings.force_send:
             log("force_override", symbol=symbol, prefilter_reason=reason, mode="bypass-prefilter")
@@ -79,12 +97,14 @@ def _run_legacy(settings) -> int:
 
         if decision.action == "NO_TRADE" or decision.signal is None:
             log("no_trade", symbol=symbol, notes=decision.notes)
+            no_trade.append(symbol)
             continue
 
         valid, validation_reason = validate_signal(decision.signal, settings.min_confidence)
         if not valid:
             log("rejected_signal", symbol=symbol, reason=validation_reason,
                 signal=decision.signal.model_dump())
+            rejected.append(symbol)
             continue
 
         if not _require_faro(settings):
@@ -94,6 +114,7 @@ def _run_legacy(settings) -> int:
         if sent >= settings.max_signals_per_run:
             break
 
+    _notify(settings, build_legacy_summary(sent, no_trade, rejected))
     log("scan_complete", mode="legacy", signals=sent, dry_run=settings.dry_run,
         audit_only=settings.audit_only, force_symbol=settings.force_symbol,
         force_send=settings.force_send)
@@ -132,6 +153,7 @@ def _run_bayes(settings) -> int:
         return 2
 
     sent = 0
+    published: list[dict] = []
     for merged in out["selected"]:
         symbol = merged["symbol"]
         signal = candidate_to_signal(merged)
@@ -153,9 +175,16 @@ def _run_bayes(settings) -> int:
 
         if _publish(settings, signal):
             sent += 1
+            published.append({
+                "symbol": symbol,
+                "posterior": merged.get("posterior"),
+                "event_value": merged.get("event_value"),
+                "plan": (merged.get("row") or {}).get("plan"),
+            })
         if sent >= settings.max_signals_per_run:
             break
 
+    _notify(settings, build_scan_summary(out, published, mode="bayes"))
     log("scan_complete", mode="bayes", signals=sent, dry_run=settings.dry_run,
         audit_only=settings.audit_only, force_symbol=settings.force_symbol,
         force_send=settings.force_send, selected=len(out["selected"]),
